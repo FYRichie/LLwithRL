@@ -10,4 +10,5 @@ class Model(nn.Module):
         self.__critic_network = config.critic_network
         
     def forward(self, x):
+        # unsure about how to do with critic network
         pass
