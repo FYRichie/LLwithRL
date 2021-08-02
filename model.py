@@ -1,14 +1,15 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.distributions import Categorical
 from config import config
 
 class RLbase(nn.Module):
     def __init__(self) -> None:
         super(RLbase, self).__init__()
-        self.base_network = config.common_network
-        self.actor_network = config.actor_network
-        self.critic_network = config.critic_network
+        self.base_network = config["common_network"]
+        self.actor_network = config["actor_network"]
+        self.critic_network = config["critic_network"]
     
     def forward(self, x):
         x = self.base_network(x)
@@ -35,6 +36,20 @@ class Actor():
         x, _ = self.network(x)
         return x
 
+    def sample(self, state):  # may add randomness to sampling
+        action_prop = self.forward(torch.FloatTensor(state))
+        action_dist = Categorical(action_prop)
+        action = action_dist.sample()
+        return action.item(), action_dist.entropy()
+
+    def learn(self, cross_entropys, benefit_degrees):
+        loss = (cross_entropys * benefit_degrees).sum()  # may use other definition, unsure about whether to add a "-" before calculating
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+    # TODO: Add save() and load()
+
 class Critic():
     def __init__(self, base) -> None:
         self.network = base
@@ -43,3 +58,11 @@ class Critic():
     def forward(self, x):
         _, x = self.network(x)
         return x
+
+    def learn(self, cross_entropys, benefit_degrees):
+        loss = (cross_entropys * benefit_degrees).sum()  # may use other definition, unsure about whether to add a "-" before calculating
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+    # TODO: Add save() and load()
