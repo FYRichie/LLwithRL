@@ -20,14 +20,17 @@ config = {
     "common_network": nn.Sequential(
         # implement common network model
         # the last layer has the same dimension with actor network and critic network
+        # the first layer dimension can be seen by calling env.observation_space
     ),
     "actor_network": nn.Sequential(
         # implement actor network model
         # actor is a classifier network
+        # the last layer dimension can be seen by calling env.action_space
     ),
     "critic_network": nn.Sequential(
         # implement critic network model
         # critic is a regression network
     ),
-    # loss define: (-log_probs * rewards).sum(), may be modified
+    "random_seed": 801,
+
 }
