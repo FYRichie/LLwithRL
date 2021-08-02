@@ -14,5 +14,5 @@ Optimizer algorithms provided by torch:<br>
 * LBFGS
 * RMSprop
 * Rprop
-* SGD
+* SGD<br>
 [More details about hyperparameters.](https://pytorch.org/docs/stable/optim.html)<br>

@@ -35,7 +35,7 @@ class Actor():
         x, _ = self.network(x)
         return x
 
-class Critic(nn.Module):
+class Critic():
     def __init__(self, base) -> None:
         self.network = base
         self.optimizer = optim.Adam(base.get_critic_parameters(), **config["common_optim_hparas"])
