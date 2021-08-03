@@ -23,15 +23,18 @@ class Main():
         print(f"Device: {self.device}")
 
     def __training(self):
-        # start_batch = 0
-        # if config["load"]:
+        start_batch = 0
+        if config["load"]:
+            start_batch = self.base.load(config["load_path"])
+            self.actor.load(config["load_path"])
+            self.critic.load(config["load_path"])
 
         # implement Reinforcement Learning training algorithm
         self.actor.network.train()
         self.critic.network.train()
 
         avg_total_rewards, avg_final_rewards = [], []
-        progress_bar = tqdm(range(config["batch_num"]))
+        progress_bar = tqdm(range(start_batch, config["batch_num"]))
         for batch in progress_bar:
             log_probs, benefit_degrees = [], []  # log_probs stores e_n, benefit_degrees stores A_n
 
@@ -70,6 +73,11 @@ class Main():
             benefit_degrees = torch.from_numpy(benefit_degrees).to(self.device)
             self.critic.learn(log_probs, benefit_degrees)
             self.actor.learn(log_probs, benefit_degrees)
+            # save model if needed
+            if config["save"] and batch % config["save_per_batch"] == 0:
+                self.base.save(batch, config["save_path"])
+                self.actor.save(config["save_path"])
+                self.critic.save(config["save_path"])
         return avg_total_rewards, avg_final_rewards
 
     def __get_trainig_result(self, avg_total_rewards, avg_final_rewards):
