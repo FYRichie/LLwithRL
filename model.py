@@ -14,8 +14,8 @@ class RLbase(nn.Module):
     def get_device(self):
         return "cuda" if torch.cuda.is_available() else "cpu"
     
-    def forward(self, x):
-        x = self.base_network(x)
+    def forward(self, state):
+        x = self.base_network(state)
         return self.actor_network(x), self.critic_network(x)
 
     def get_actor_parameters(self):
@@ -46,15 +46,15 @@ class Actor():
         self.optimizer = getattr(optim, config["actor_optimizer"])(base.get_actor_parameters(), **config["common_optim_hparas"])
         
 
-    def forward(self, x):
-        x, _ = self.network(x)
+    def forward(self, state):
+        x, _ = self.network(state)
         return x
 
     def sample(self, state):  # may add randomness to sampling
         action_prop = self.forward(torch.FloatTensor(state))
         action_dist = Categorical(action_prop)
         action = action_dist.sample()
-        return action.item(), action_dist.log_prob()
+        return action.item(), action_dist.log_prob(action)
 
     def learn(self, log_probs, benefit_degrees):
         loss = (-log_probs * benefit_degrees).sum()  # may use other definition, unsure about whether to add a "-" before calculating
@@ -78,8 +78,8 @@ class Critic():
         self.network = base.to(base.get_device())
         self.optimizer = getattr(optim, config["critic_optimizer"])(base.get_critic_parameters(), **config["common_optim_hparas"])
 
-    def forward(self, x):
-        _, x = self.network(x)
+    def forward(self, state):
+        _, x = self.network(state)
         return x
 
     def learn(self, benefit_degrees):
