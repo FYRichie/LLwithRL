@@ -34,7 +34,7 @@ config = {
         # the last layer dimension can be seen by calling env.action_space
         nn.Linear(32, 16),
         nn.Linear(16, 4),
-        nn.Softmax(dim = 1)
+        nn.Softmax(dim = -1)
     ),
     "critic_network": nn.Sequential(
         # implement critic network model
