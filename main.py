@@ -66,10 +66,9 @@ class Main():
             avg_final_rewards.append(sum(final_rewards) / len(final_rewards))
             progress_bar.set_description(f"Total: {avg_total_rewards[-1]: 4.1f}, Final: {avg_final_rewards[-1]: 4.1f}")
             # renew actor and critic
-            benefit_degrees = (benefit_degrees - np.mean(benefit_degrees)) / (np.std(benefit_degrees) + 1e-9)  # standarize benefit degrees
-
             log_probs = torch.stack(log_probs).to(self.device)
-            benefit_degrees = torch.from_numpy(benefit_degrees).to(self.device)
+            benefit_degrees = torch.stack(benefit_degrees).to(self.device)
+            benefit_degrees = (benefit_degrees - benefit_degrees.mean(dim=1, keepdim=True)) / (benefit_degrees.std(dim=1, keepdim=True) + 1e-9)  # standarize benefit degrees
             self.critic.learn(benefit_degrees)
             self.actor.learn(log_probs, benefit_degrees)
             # save model if needed
