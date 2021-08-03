@@ -41,23 +41,21 @@ class RLbase(nn.Module):
 
 class Actor():
     def __init__(self, base) -> None:
-        self.network = base.to(base.get_device())
-        # self.optimizer = optim.Adam(base.get_actor_parameters(), **config["common_optim_hparas"])
+        self.network = base
         self.optimizer = getattr(optim, config["actor_optimizer"])(base.get_actor_parameters(), **config["common_optim_hparas"])
-        
 
     def forward(self, state):
-        x, _ = self.network(state)
+        x, _ = self.network(torch.FloatTensor(state).to(self.network.get_device()))
         return x
 
     def sample(self, state):  # may add randomness to sampling
-        action_prop = self.forward(torch.FloatTensor(state))
+        action_prop = self.forward(state)
         action_dist = Categorical(action_prop)
         action = action_dist.sample()
         return action.item(), action_dist.log_prob(action)
 
     def learn(self, log_probs, benefit_degrees):
-        loss = (-log_probs * benefit_degrees).sum()  # may use other definition, unsure about whether to add a "-" before calculating
+        loss = (-log_probs * benefit_degrees).sum()
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -75,15 +73,15 @@ class Actor():
 
 class Critic():
     def __init__(self, base) -> None:
-        self.network = base.to(base.get_device())
+        self.network = base
         self.optimizer = getattr(optim, config["critic_optimizer"])(base.get_critic_parameters(), **config["common_optim_hparas"])
 
     def forward(self, state):
-        _, x = self.network(state)
+        _, x = self.network(torch.FloatTensor(state).to(self.network.get_device()))
         return x
 
     def learn(self, benefit_degrees):
-        loss = (benefit_degrees * benefit_degrees).sum()
+        loss = (benefit_degrees * benefit_degrees).sum().requires_grad_()
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()

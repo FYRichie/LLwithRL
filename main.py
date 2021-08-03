@@ -3,7 +3,7 @@ import torch
 from model import RLbase, Actor, Critic
 from config import config
 from fix import fix
-from tqdm._tqdm_notebook import tqdm
+from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -28,6 +28,7 @@ class Main():
             self.actor.load(config["load_path"])
             self.critic.load(config["load_path"])
 
+        self.base.to(self.device)
         # implement Reinforcement Learning training algorithm
         self.actor.network.train()
         self.critic.network.train()
@@ -41,14 +42,13 @@ class Main():
             total_rewards, final_rewards = [], []  # total_rewards stores the total reward of the whole sequence, final_rewards stores the reward while finishing an episode(check to see if landing success)
             # collecting training data
             for episode in range(config["episode_per_batch"]):
-                state = torch.tensor(self.env.reset()).to(self.device)
+                state = self.env.reset()
                 total_reward, total_step = 0, 0
                 while True:
                     action, log_prob = self.actor.sample(state)
                     next_state, reward, done, _ = self.env.step(action)
-                    next_state = torch.tensor(next_state).to(self.device)
 
-                    bd = reward + self.critic.forward(next_state) - self.critic.forward(state)  # implements Advantage actor-critic
+                    bd = reward + self.critic.forward(next_state).detach().cpu() - self.critic.forward(state).detach().cpu()  # implements Advantage actor-critic
                     benefit_degrees.append(bd)
                     log_probs.append(log_prob)
                     state = next_state
@@ -58,7 +58,7 @@ class Main():
                         final_rewards.append(reward)
                         total_rewards.append(total_reward)
                         break
-            print(f"benefit degrees looks like ", np.shape(benefit_degrees))  
+            print(f"\nbenefit degrees looks like ", np.shape(benefit_degrees))  
             print(f"cross log_probs looks like ", np.shape(log_probs))
 
             # record training process
@@ -68,9 +68,9 @@ class Main():
             # renew actor and critic
             log_probs = torch.stack(log_probs).to(self.device)
             benefit_degrees = torch.stack(benefit_degrees).to(self.device)
-            benefit_degrees = (benefit_degrees - benefit_degrees.mean(dim=1, keepdim=True)) / (benefit_degrees.std(dim=1, keepdim=True) + 1e-9)  # standarize benefit degrees
-            self.critic.learn(benefit_degrees)
+            benefit_degrees = (benefit_degrees - benefit_degrees.mean(dim=0, keepdim=True)) / (benefit_degrees.std(dim=0, keepdim=True) + 1e-9)  # standarize benefit degrees
             self.actor.learn(log_probs, benefit_degrees)
+            self.critic.learn(benefit_degrees)
             # save model if needed
             if config["save"] and batch % config["save_per_batch"] == 0:
                 self.base.save(batch, config["save_path"])
@@ -81,6 +81,7 @@ class Main():
     def __get_trainig_result(self, avg_total_rewards, avg_final_rewards):
         plt.plot(avg_total_rewards, label="avg total rewards")
         plt.plot(avg_final_rewards, label="avg final rewards")
+        plt.legend()
         plt.xlabel("batch num")
         plt.ylabel("reward")
         plt.title("Model training result")
@@ -94,7 +95,7 @@ class Main():
         action_distribution = {}
         for test_episode in range(config["test_episode_num"]):
             action_num, total_reward = 0, 0
-            state = torch.tensor(self.env.reset()).to(self.device)
+            state = self.env.reset()
             done = False
             while not done:
                 action, _ = self.actor.sample(state)
@@ -118,7 +119,6 @@ class Main():
         self.__set_environment()
         avg_total_rewards, avg_final_rewards = self.__training()
         self.__get_trainig_result(avg_total_rewards, avg_final_rewards)
-
 
 if __name__ == "__main__":
     Main().main()
