@@ -71,7 +71,7 @@ class Main():
 
             log_probs = torch.stack(log_probs).to(self.device)
             benefit_degrees = torch.from_numpy(benefit_degrees).to(self.device)
-            self.critic.learn(log_probs, benefit_degrees)
+            self.critic.learn(benefit_degrees)
             self.actor.learn(log_probs, benefit_degrees)
             # save model if needed
             if config["save"] and batch % config["save_per_batch"] == 0:

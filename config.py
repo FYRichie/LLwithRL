@@ -48,10 +48,10 @@ config = {
     "random_seed": 801,
     "batch_num": 400,  # times for actor, critic to renew
     "episode_per_batch": 5,  # the bigger the num is, the more training data can collect
-    "test_episode_num": 5,  # times for testing the model
     "save": False,  # determine whether to save current model during trainig
     "save_per_batch": 10,  # save model while after num
     "save_path": "none",  # where to save
     "load": False,  # load model from previous progress
     "load_path": "none",  # load path
+    "test_episode_num": 5,  # times for testing the model
 }

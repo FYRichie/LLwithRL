@@ -76,15 +76,14 @@ class Actor():
 class Critic():
     def __init__(self, base) -> None:
         self.network = base.to(base.get_device())
-        # self.optimizer = optim.Adam(base.get_critic_parameters(), **config["common_optim_hparas"])
         self.optimizer = getattr(optim, config["critic_optimizer"])(base.get_critic_parameters(), **config["common_optim_hparas"])
 
     def forward(self, state):
         _, x = self.network(state)
         return x
 
-    def learn(self, log_probs, benefit_degrees):
-        loss = (log_probs * benefit_degrees).sum()  # may use other definition, unsure about whether to add a "-" before calculating
+    def learn(self, benefit_degrees):
+        loss = (benefit_degrees * benefit_degrees).sum()
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
