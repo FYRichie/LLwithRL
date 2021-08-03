@@ -1,10 +1,9 @@
 import gym
-from numpy.lib.function_base import average
 import torch
 from model import RLbase, Actor, Critic
 from config import config
 from fix import fix
-import tqdm
+from tqdm._tqdm_notebook import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -111,11 +110,11 @@ class Main():
         print(f"Model average reward when testing for {config['test_episode_num']} times is: %.2f"%avg_reward)
         print("Action distribution: ", action_distribution)
 
-
     def main(self):
         # TODO: Finish main function
-        # self.__set_environment()
-        pass
+        self.__set_environment()
+        avg_total_rewards, avg_final_rewards = self.__training()
+        self.__get_trainig_result(avg_total_rewards, avg_final_rewards)
 
 
 if __name__ == "__main__":
