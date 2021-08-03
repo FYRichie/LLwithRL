@@ -30,6 +30,15 @@ class RLbase(nn.Module):
             {"params": self.critic_network.parameters(), **config["critic_optim_hparas"]}
         ]
 
+    def save(self, batch, PATH):
+        torch.save({
+            "batch": batch
+        }, PATH)
+    
+    def load(self, PATH):
+        checkpoint = torch.load(PATH)
+        return checkpoint["batch"]
+
 class Actor():
     def __init__(self, base) -> None:
         self.network = base.to(base.get_device())
@@ -45,7 +54,7 @@ class Actor():
         action_prop = self.forward(torch.FloatTensor(state))
         action_dist = Categorical(action_prop)
         action = action_dist.sample()
-        return action.item(), action_dist.entropy()
+        return action.item(), action_dist.log_prob()
 
     def learn(self, log_probs, benefit_degrees):
         loss = (log_probs * benefit_degrees).sum()  # may use other definition, unsure about whether to add a "-" before calculating
@@ -53,7 +62,16 @@ class Actor():
         loss.backward()
         self.optimizer.step()
 
-    # TODO: Add save() and load()
+    def save(self, PATH):
+        torch.save({
+            "actor_network": self.network.state_dict(),
+            "actor_optimizer": self.optimizer.state_dict()
+        }, PATH)
+
+    def load(self, PATH):
+        checkpoint = torch.load(PATH)
+        self.network.load_state_dict(checkpoint["actor_network"])
+        self.optimizer.load_state_dict(checkpoint["actor_optimizer"])
 
 class Critic():
     def __init__(self, base) -> None:
@@ -71,4 +89,13 @@ class Critic():
         loss.backward()
         self.optimizer.step()
 
-    # TODO: Add save() and load()
+    def save(self, PATH):
+        torch.save({
+            "critic_network": self.network.state_dict(),
+            "critic_optimizer": self.optimizer.state_dict()
+        }, PATH)
+
+    def load(self, PATH):
+        checkpoint = torch.load(PATH)
+        self.network.load_state_dict(checkpoint["critic_network"])
+        self.optimizer.load_state_dict(checkpoint["critic_optimizer"])
