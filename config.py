@@ -6,10 +6,12 @@ config = {
         "lr": 0.0001,  # base learning rate
         "weight_decay": 1e-5,  # optional while using Adam
     },
+    "actor_optimizer": "Adam",
     "actor_optim_hparas": {
         "lr": 0.0001,  # needs to be modified, can be different with base learning rate
         "weight_decay": 1e-5,  # optional while using Adam
     },
+    "critic_optimizer": "Adam",
     "critic_optim_hparas":{
         "lr": 0.0001,  # needs to be modified, can be different with base learning rate
         "weight_decay": 1e-5,  # optional while using Adam

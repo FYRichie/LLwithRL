@@ -10,6 +10,9 @@ class RLbase(nn.Module):
         self.base_network = config["common_network"]
         self.actor_network = config["actor_network"]
         self.critic_network = config["critic_network"]
+
+    def get_device(self):
+        return "cuda" if torch.cuda.is_available() else "cpu"
     
     def forward(self, x):
         x = self.base_network(x)
@@ -29,8 +32,10 @@ class RLbase(nn.Module):
 
 class Actor():
     def __init__(self, base) -> None:
-        self.network = base
-        self.optimizer = optim.Adam(base.get_actor_parameters(), **config["common_optim_hparas"])
+        self.network = base.to(base.get_device())
+        # self.optimizer = optim.Adam(base.get_actor_parameters(), **config["common_optim_hparas"])
+        self.optimizer = getattr(optim, config["actor_optimizer"])(base.get_actor_parameters(), **config["common_optim_hparas"])
+        
 
     def forward(self, x):
         x, _ = self.network(x)
@@ -52,8 +57,9 @@ class Actor():
 
 class Critic():
     def __init__(self, base) -> None:
-        self.network = base
-        self.optimizer = optim.Adam(base.get_critic_parameters(), **config["common_optim_hparas"])
+        self.network = base.to(base.get_device())
+        # self.optimizer = optim.Adam(base.get_critic_parameters(), **config["common_optim_hparas"])
+        self.optimizer = getattr(optim, config["critic_optimizer"])(base.get_critic_parameters(), **config["common_optim_hparas"])
 
     def forward(self, x):
         _, x = self.network(x)
