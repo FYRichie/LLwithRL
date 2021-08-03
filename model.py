@@ -57,7 +57,7 @@ class Actor():
         return action.item(), action_dist.log_prob()
 
     def learn(self, log_probs, benefit_degrees):
-        loss = (log_probs * benefit_degrees).sum()  # may use other definition, unsure about whether to add a "-" before calculating
+        loss = (-log_probs * benefit_degrees).sum()  # may use other definition, unsure about whether to add a "-" before calculating
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()

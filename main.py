@@ -37,18 +37,17 @@ class Main():
         progress_bar = tqdm(range(start_batch, config["batch_num"]))
         for batch in progress_bar:
             log_probs, benefit_degrees = [], []  # log_probs stores e_n, benefit_degrees stores A_n
-
-
             total_rewards, final_rewards = [], []  # total_rewards stores the total reward of the whole sequence, final_rewards stores the reward while finishing an episode(check to see if landing success)
+
             # collecting training data
             for episode in range(config["episode_per_batch"]):
                 state = torch.tensor(self.env.reset()).to(self.device)
                 total_reward, total_step = 0, 0
+
                 while True:
                     action, log_prob = self.actor.sample(state)
                     next_state, reward, done, _ = self.env.step(action)
                     next_state = torch.tensor(next_state).to(self.device)
-
                     bd = reward + self.critic.forward(next_state) - self.critic.forward(state)  # implements Advantage actor-critic
                     benefit_degrees.append(bd)
                     log_probs.append(log_prob)
@@ -119,7 +118,7 @@ class Main():
 
     def main(self):
         # TODO: Finish main function
-        # self.__set_environment()
+        self.__set_environment()
         pass
 
 
