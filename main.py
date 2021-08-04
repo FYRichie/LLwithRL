@@ -1,10 +1,9 @@
 import gym
-from numpy.lib.function_base import average
 import torch
 from model import RLbase, Actor, Critic
 from config import config
 from fix import fix
-import tqdm
+from tqdm._tqdm_notebook import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -30,6 +29,7 @@ class Main():
             self.critic.load(config["load_path"])
 
         # implement Reinforcement Learning training algorithm
+        self.base.to(self.device)
         self.actor.network.train()
         self.critic.network.train()
 
@@ -66,10 +66,9 @@ class Main():
             avg_final_rewards.append(sum(final_rewards) / len(final_rewards))
             progress_bar.set_description(f"Total: {avg_total_rewards[-1]: 4.1f}, Final: {avg_final_rewards[-1]: 4.1f}")
             # renew actor and critic
-            benefit_degrees = (benefit_degrees - np.mean(benefit_degrees)) / (np.std(benefit_degrees) + 1e-9)  # standarize benefit degrees
-
             log_probs = torch.stack(log_probs).to(self.device)
-            benefit_degrees = torch.from_numpy(benefit_degrees).to(self.device)
+            benefit_degrees = torch.stack(benefit_degrees).to(self.device)
+            benefit_degrees = (benefit_degrees - benefit_degrees.mean(dim=1, keepdim=True)) / (benefit_degrees.std(dim=1, keepdim=True) + 1e-9)  # standarize benefit degrees
             self.critic.learn(benefit_degrees)
             self.actor.learn(log_probs, benefit_degrees)
             # save model if needed
@@ -114,12 +113,12 @@ class Main():
         print(f"Model average reward when testing for {config['test_episode_num']} times is: %.2f"%avg_reward)
         print("Action distribution: ", action_distribution)
 
-
-
     def main(self):
         # TODO: Finish main function
         self.__set_environment()
-        pass
+        avg_total_rewards, avg_final_rewards = self.__training()
+        self.__get_trainig_result(avg_total_rewards, avg_final_rewards)
+
 
 
 if __name__ == "__main__":

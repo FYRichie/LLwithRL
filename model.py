@@ -54,7 +54,7 @@ class Actor():
         action_prop = self.forward(torch.FloatTensor(state))
         action_dist = Categorical(action_prop)
         action = action_dist.sample()
-        return action.item(), action_dist.log_prob()
+        return action.item(), action_dist.log_prob(action)
 
     def learn(self, log_probs, benefit_degrees):
         loss = (-log_probs * benefit_degrees).sum()  # may use other definition, unsure about whether to add a "-" before calculating
