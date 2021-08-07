@@ -1,57 +1,40 @@
-import torch
 import torch.nn as nn
 
 config = {
-    "common_optim_hparas": {
-        "lr": 0.0001,  # base learning rate
-        "weight_decay": 1e-5,  # optional while using Adam
-        # "momentum": 0.5,  only needs when using SGD
-    },
-    "actor_optimizer": "Adam",
-    "actor_optim_hparas": {
-        "lr": 0.0001,  # needs to be modified, can be different with base learning rate
-        "weight_decay": 1e-5,  # optional while using Adam
-        # "momentum": 0.5,  only needs when using SGD
-    },
-    "critic_optimizer": "Adam",
-    "critic_optim_hparas":{
-        "lr": 0.0001,  # needs to be modified, can be different with base learning rate
-        "weight_decay": 1e-5,  # optional while using Adam
-        # "momentum": 0.5,  only needs when using SGD
-    },
     "common_network": nn.Sequential(
         # implement common network model
         # the last layer has the same dimension with actor network and critic network
         # the first layer dimension can be seen by calling env.observation_space
-        nn.Linear(8, 16), 
-        nn.Linear(16, 16), 
-        nn.Linear(16, 32)
-        
+        nn.Linear(8, 256),
+        nn.ReLU()
     ),
     "actor_network": nn.Sequential(
         # implement actor network model
         # actor is a classifier network
         # the last layer dimension can be seen by calling env.action_space
-        nn.Linear(32, 16),
-        nn.Linear(16, 4),
-        nn.Softmax(dim = -1)
+        nn.Linear(256, 4),
+        nn.Softmax()
     ),
     "critic_network": nn.Sequential(
         # implement critic network model
         # critic is a regression network
-        nn.Linear(32, 16),
-        nn.ReLU(),
-        nn.Linear(16, 4),
-        nn.ReLU(),
-        nn.Linear(4, 1)
+        nn.Linear(256, 1)
     ),
+    "optimizer": "Adam",
+    "optim_hparas": {
+        "lr": 0.02,
+        "weight_decay": 1e-5,  # l2 regulization
+        # "momnetum": 0.5,  only needs when using SGD
+    },
+    "gamma": 0.99,  # discount factor
+    "batch_num": 400,
+    "max_steps": 999,
+    "episode_per_batch": 5,
     "random_seed": 801,
-    "batch_num": 400,  # times for actor, critic to renew
-    "episode_per_batch": 5,  # the bigger the num is, the more training data can collect
-    "test_episode_num": 5,  # times for testing the model
-    "save": False,  # determine whether to save current model during trainig
-    "save_per_batch": 10,  # save model while after num
-    "save_path": "none",  # where to save
-    "load": False,  # load model from previous progress
-    "load_path": "none",  # load path
+    "load": False,
+    "load_path": "",
+    "save": False,
+    "save_per_batch": 10,
+    "save_path": "",
+    "test_episode_num": 5,
 }
