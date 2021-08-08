@@ -56,23 +56,20 @@ class Main():
                 while True:
                     action, log_prob, cur_cumm_reward = self.actor_critic.sample(state)
                     next_state, reward, done, _ = self.env.step(action)
-                    _, _, next_cumm_reward = self.actor_critic.sample(next_state)
-
-                    benefit_degrees.append(reward + next_cumm_reward - cur_cumm_reward)
+                    _, _, next_cumm_reward = self.actor_critic.sample(next_state)   
+                    benefit_degrees.append(reward + config["gamma"] * next_cumm_reward - cur_cumm_reward)
                     log_probs.append(log_prob)
                     critic_loss.append(reward + config["gamma"] * next_cumm_reward - cur_cumm_reward)
+                    #
+                    self.actor_critic.learn(-torch.exp(log_prob) * (reward + config["gamma"] * next_cumm_reward - cur_cumm_reward), (reward + config["gamma"] * next_cumm_reward - cur_cumm_reward))
                     state = next_state
                     total_reward += reward
                     total_step += 1
-                    if done or total_step == config["max_steps"]:
+                    if done:# or total_step == config["max_steps"]:
                         final_rewards.append(reward)
                         total_rewards.append(total_reward)
                         total_steps.append(total_step)
                         break
-            #print(f"\nbenefit degrees looks like ", len(benefit_degrees))  
-            #print(f"cross log_probs looks like ", len(log_probs))
-            #print("total steps during episode: ", sum(total_steps))
-            #print(log_probs)
 
             # record training process
             avg_total_rewards.append(sum(total_rewards) / len(total_rewards))
@@ -81,17 +78,13 @@ class Main():
             # renew actor and critic
             benefit_degrees = torch.stack(benefit_degrees).to(self.device)
             benefit_degrees = torch.squeeze(benefit_degrees)
-            benefit_degrees = (benefit_degrees - benefit_degrees.mean(dim=0, keepdim=True)) / (benefit_degrees.std(dim=0, keepdim=True) + 1e-9)  # standarize benefit degrees
-            #print(benefit_degrees.sum())
+            #benefit_degrees = (benefit_degrees - benefit_degrees.mean(dim=0, keepdim=True)) / (benefit_degrees.std(dim=0, keepdim=True) + 1e-9)  # standarize benefit degrees
             actor_loss = (-torch.stack(log_probs).to(self.device) * benefit_degrees)
             critic_loss = torch.tensor(critic_loss).to(self.device)
-            #print("\n")
-            #print(np.shape(np.array(list(map(lambda x: x.item(), torch.stack(log_probs))))))
-            #print(np.shape(np.array(list(map(lambda x: x.item(), benefit_degrees)))))
-            #print(np.shape((-torch.stack(log_probs) * benefit_degrees).cpu().detach().numpy()))
+
             plt_a_loss.append(actor_loss.sum().item())
-            plt_c_loss.append((0.000001 * critic_loss * critic_loss).sum().item())
-            self.actor_critic.learn(actor_loss, critic_loss)
+            plt_c_loss.append((0.5 * critic_loss * critic_loss).sum().item())
+            #self.actor_critic.learn(actor_loss, critic_loss)
             # save model if needed
             if config["save"] and progress % config["save_per_batch"] == 0:
                 self.actor_critic.save(config["save_path"], progress)
