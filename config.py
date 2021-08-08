@@ -27,7 +27,7 @@ config = {
         # "momnetum": 0.5,  only needs when using SGD
     },
     "gamma": 0.99,  # discount factor
-    "batch_num": 400,
+    "batch_num": 1000,
     "max_steps": 999,
     "episode_per_batch": 5,
     "random_seed": 801,

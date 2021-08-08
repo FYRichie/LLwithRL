@@ -1,7 +1,7 @@
 import gym
 from gym.envs.registration import register
 import torch
-from torch import random
+# from torch import random
 from model import RLbase, Actor_Critic
 from config import config
 from tqdm import tqdm
@@ -64,7 +64,7 @@ class Main():
                     state = next_state
                     total_reward += reward
                     total_step += 1
-                    if done or total_step == config["max_steps"]:
+                    if done :
                         final_rewards.append(reward)
                         total_rewards.append(total_reward)
                         total_steps.append(total_step)
@@ -90,7 +90,7 @@ class Main():
             #print(np.shape(np.array(list(map(lambda x: x.item(), benefit_degrees)))))
             #print(np.shape((-torch.stack(log_probs) * benefit_degrees).cpu().detach().numpy()))
             plt_a_loss.append(actor_loss.sum().item())
-            plt_c_loss.append((0.000001 * critic_loss * critic_loss).sum().item())
+            plt_c_loss.append((critic_loss * critic_loss).sum().item())
             self.actor_critic.learn(actor_loss, critic_loss)
             # save model if needed
             if config["save"] and progress % config["save_per_batch"] == 0:
