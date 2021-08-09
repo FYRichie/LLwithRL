@@ -70,6 +70,7 @@ class Main():
                         final_rewards.append(reward)
                         total_rewards.append(total_reward)
                         total_steps.append(total_step)
+                        
                         break
 
             # record training process
