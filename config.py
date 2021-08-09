@@ -19,8 +19,7 @@ config = {
     "critic_network": nn.Sequential(
         # implement critic network model
         # critic is a regression network
-        nn.Linear(64, 16),
-        nn.Linear(16, 1)
+        nn.Linear(64, 1)
     ),
     "optimizer": "Adam",
     "optim_hparas": {
@@ -29,7 +28,7 @@ config = {
         # "momnetum": 0.5,  only needs when using SGD
     },
     "gamma": 0.99,  # discount factor
-    "batch_num": 80,
+    "batch_num": 40,
     "max_steps": 999,
     "episode_per_batch": 5,
     "random_seed": 801,

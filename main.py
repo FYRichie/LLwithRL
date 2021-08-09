@@ -52,6 +52,7 @@ class Main():
             for episode in range(config["episode_per_batch"]):
                 state = self.env.reset()
                 total_reward, total_step = 0, 0
+                rewards = [], values = []
 
                 while True:
                     action, log_prob, cur_cumm_reward = self.actor_critic.sample(state)
@@ -59,9 +60,9 @@ class Main():
                     _, _, next_cumm_reward = self.actor_critic.sample(next_state)   
                     benefit_degrees.append(reward + config["gamma"] * next_cumm_reward - cur_cumm_reward)
                     log_probs.append(log_prob)
-                    critic_loss.append(reward + config["gamma"] * next_cumm_reward - cur_cumm_reward)
+                    values.append(cur_cumm_reward)
+                    rewards.append(reward)
                     #
-                    self.actor_critic.learn(-torch.exp(log_prob) * (reward + config["gamma"] * next_cumm_reward - cur_cumm_reward), (reward + config["gamma"] * next_cumm_reward - cur_cumm_reward))
                     state = next_state
                     total_reward += reward
                     total_step += 1
