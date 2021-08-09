@@ -38,66 +38,36 @@ class Main():
         
         self.base.to(self.device)
         self.actor_critic.network.train()
-
-        avg_total_rewards, avg_final_rewards = [], []
-        plt_a_loss = []
-        plt_c_loss = []
+        
         progress_bar = tqdm(range(start_batch, config["batch_num"]))
-        for progress in progress_bar:
-            log_probs, benefit_degrees = [], []
-            total_rewards, final_rewards = [], []
-            total_steps = []
-            critic_loss = []
-            
+        for batch in progress_bar:
+            action_probs, benefit_degrees = [], []
+            cumulated_rewards = []
+
             for episode in range(config["episode_per_batch"]):
+                cr_ground_truth, cr = [], []
                 state = self.env.reset()
                 total_reward, total_step = 0, 0
-
                 while True:
-                    action, log_prob, cur_cumm_reward = self.actor_critic.sample(state)
+                    action, action_prob, cumulated_reward = self.actor_critic.sample(state)
                     next_state, reward, done, _ = self.env.step(action)
-                    _, _, next_cumm_reward = self.actor_critic.sample(next_state)
+                    _, _, next_cumulated_reward = self.actor_critic.sample(next_state)
 
-                    benefit_degrees.append(reward + next_cumm_reward - cur_cumm_reward)
-                    log_probs.append(log_prob)
-                    critic_loss.append(reward + config["gamma"] * next_cumm_reward - cur_cumm_reward)
+                    bd = reward + next_cumulated_reward - cumulated_reward
+                    benefit_degrees.append(bd)
+                    action_probs.append(action_prob)
+                    cr_ground_truth.append(reward)
+                    cr.append(cumulated_reward)
                     state = next_state
                     total_reward += reward
                     total_step += 1
-                    if done :
-                        final_rewards.append(reward)
-                        total_rewards.append(total_reward)
-                        total_steps.append(total_step)
+                    if done:
+                        for i in range(len(cr_ground_truth) - 2, -1, -1):
+                            cr_ground_truth[i] = cr_ground_truth[i + 1] * config["gamma"] + cr_ground_truth[i]
+                        # cumulated_rewards.append(cr_ground_truth)
                         break
-            #print(f"\nbenefit degrees looks like ", len(benefit_degrees))  
-            #print(f"cross log_probs looks like ", len(log_probs))
-            #print("total steps during episode: ", sum(total_steps))
-            #print(log_probs)
-
-            # record training process
-            avg_total_rewards.append(sum(total_rewards) / len(total_rewards))
-            avg_final_rewards.append(sum(final_rewards) / len(final_rewards))
-            progress_bar.set_description(f"Total: {avg_total_rewards[-1]: 4.1f}, Final: {avg_final_rewards[-1]: 4.1f}")
-            # renew actor and critic
-            benefit_degrees = torch.stack(benefit_degrees).to(self.device)
-            benefit_degrees = torch.squeeze(benefit_degrees)
-            benefit_degrees = (benefit_degrees - benefit_degrees.mean(dim=0, keepdim=True)) / (benefit_degrees.std(dim=0, keepdim=True) + 1e-9)  # standarize benefit degrees
-            #print(benefit_degrees.sum())
-            actor_loss = (-torch.stack(log_probs).to(self.device) * benefit_degrees)
-            critic_loss = torch.tensor(critic_loss).to(self.device)
-            #print("\n")
-            #print(np.shape(np.array(list(map(lambda x: x.item(), torch.stack(log_probs))))))
-            #print(np.shape(np.array(list(map(lambda x: x.item(), benefit_degrees)))))
-            #print(np.shape((-torch.stack(log_probs) * benefit_degrees).cpu().detach().numpy()))
-            plt_a_loss.append(actor_loss.sum().item())
-            plt_c_loss.append((critic_loss * critic_loss).sum().item())
-            self.actor_critic.learn(actor_loss, critic_loss)
-            # save model if needed
-            if config["save"] and progress % config["save_per_batch"] == 0:
-                self.actor_critic.save(config["save_path"], progress)
-        #print(plt_a_loss, plt_c_loss)
-        return avg_total_rewards, avg_final_rewards, plt_a_loss, plt_c_loss
-
+            
+        
     def __get_trainig_result(self, avg_total_rewards, avg_final_rewards, label1, label2):
         plt.plot(avg_total_rewards, label=label1)
         plt.plot(avg_final_rewards, label=label2)

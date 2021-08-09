@@ -27,13 +27,14 @@ class Actor_Critic():
         action_prop, cummulated_reward = self.network(torch.FloatTensor(state).to(self.network.get_device()))
         action_dist = Categorical(action_prop)
         action = action_dist.sample()
-        return action.item(), action_dist.log_prob(action), cummulated_reward
+        return action.item(), action_dist[action], cummulated_reward
 
     def learn(self, actor_loss, critic_loss):
-        loss = (0.01*actor_loss + critic_loss * critic_loss).sum()
+        loss = (actor_loss + critic_loss.pow(2)).sum()
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+
 
     def save(self, PATH, progress):
         torch.save({
