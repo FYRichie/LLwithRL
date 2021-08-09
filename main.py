@@ -52,7 +52,7 @@ class Main():
             for episode in range(config["episode_per_batch"]):
                 state = self.env.reset()
                 total_reward, total_step = 0, 0
-                rewards = [], values = []
+                rewards, values = [], []
 
                 while True:
                     action, log_prob, cur_cumm_reward = self.actor_critic.sample(state)
@@ -70,7 +70,6 @@ class Main():
                         final_rewards.append(reward)
                         total_rewards.append(total_reward)
                         total_steps.append(total_step)
-                        
                         break
 
             # record training process
