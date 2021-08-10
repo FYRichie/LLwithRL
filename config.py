@@ -24,17 +24,17 @@ config = {
     "optim_hparas": {
         "lr": 0.002,
         "weight_decay": 1e-5,  # l2 regulization
-        # "momnetum": 0.5,  only needs when using SGD
+        # "momentum": 0.5,  only needs when using SGD
     },
     "gamma": 0.99,  # discount factor
-    "batch_num": 1000,
-    "max_steps": 999,
+    "batch_num": 500,
+    "max_steps": 500,
     "episode_per_batch": 5,
     "random_seed": 801,
-    "load": False,
-    "load_path": "",
-    "save": False,
+    "load": True,
+    "load_path": "./models/MCModelwith500step.ckpt",
+    "save": True,
     "save_per_batch": 10,
-    "save_path": "",
+    "save_path": "./models/MCModelwith500step.ckpt",
     "test_episode_num": 5,
 }
