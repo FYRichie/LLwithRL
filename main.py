@@ -33,8 +33,10 @@ class Main():
 
     def __training(self):
         start_batch = 0
+        total_rewards = []
+        total_losses = []
         if config["load"]:
-            start_batch = self.actor_critic.load(config["load_path"])
+            start_batch, total_rewards, total_losses = self.actor_critic.load(config["load_path"])
         
         self.base.to(self.device)
         self.actor_critic.network.train()
@@ -42,7 +44,6 @@ class Main():
         progress_bar = tqdm(range(start_batch, config["batch_num"]))
         for batch in progress_bar:
             ac_losses,cr_losses = [], []
-            total_rewards = []
 
             for episode in range(config["episode_per_batch"]):
                 action_probs, benefit_degrees = [], []
@@ -72,11 +73,12 @@ class Main():
                         ac_losses.append(ac_loss)
                         total_rewards.append(total_reward)
                         break
+            total_losses.append(sum([(a.sum() + b.sum()).item() for a, b in zip(cr_losses, ac_losses)])/config["episode_per_batch"])
             self.actor_critic.learn(ac_losses, cr_losses)
             if config["save"] and batch % config["save_per_batch"] == 0:
-                self.actor_critic.save(config["save_path"], batch)
+                self.actor_critic.save(config["save_path"], batch, total_rewards, total_losses)
             
-    def __get_trainig_result(self, avg_total_rewards, avg_final_rewards, label1, label2):
+    def __get_training_result(self, avg_total_rewards, avg_final_rewards, label1, label2):
         plt.plot(avg_total_rewards, label=label1)
         plt.plot(avg_final_rewards, label=label2)
         plt.legend()
@@ -115,6 +117,9 @@ class Main():
     def main(self):
         self.__set_environment()
         self.__training()
+        _, total_rewards, total_losses = self.actor_critic.load(config["load_path"])
+        self.__get_training_result(total_rewards, total_rewards, "total rewards", "total rewards")
+        self.__get_training_result(total_losses, total_losses, "total losses", "total losses")
         # self.__get_trainig_result(avg_total_rewards, avg_final_rewards, "avg total rewards", "avg final rewards")
         # self.__get_trainig_result(plt_a_loss, plt_a_loss, "actor loss", "actor loss")
         # self.__get_trainig_result(plt_c_loss, plt_c_loss, "critic loss", "critic loss")

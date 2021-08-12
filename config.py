@@ -27,14 +27,14 @@ config = {
         # "momentum": 0.5,  only needs when using SGD
     },
     "gamma": 0.99,  # discount factor
-    "batch_num": 500,
-    "max_steps": 500,
+    "batch_num": 800,
+    "max_steps": 600,
     "episode_per_batch": 5,
     "random_seed": 801,
     "load": True,
-    "load_path": "./models/MCModelwith500step.ckpt",
+    "load_path": "./models/800batch600max.ckpt",
     "save": True,
     "save_per_batch": 10,
-    "save_path": "./models/MCModelwith500step.ckpt",
+    "save_path": "./models/800batch600max.ckpt",
     "test_episode_num": 5,
 }
